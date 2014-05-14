@@ -25,6 +25,7 @@ class Html extends \lithium\template\Helper {
 		'block'            => '<div{:options}>{:content}</div>',
 		'block-end'        => '</div>',
 		'block-start'      => '<div{:options}>',
+		'button'           => '<button type="button" href="{:url}"{:options}>{:title}</button>',
 		'charset'          => '<meta charset="{:encoding}" />',
 		'image'            => '<img src="{:path}"{:options} />',
 		'js-block'         => '<script type="text/javascript"{:options}>{:content}</script>',
@@ -114,6 +115,40 @@ class Html extends \lithium\template\Helper {
 			$encoding = $encoding ?: $response->encoding;
 		}
 		return $this->_render(__METHOD__, 'charset', compact('encoding'));
+	}
+
+	/**
+	 * Creates an HTML button.
+	 *
+	 * If `$url` starts with `'http://'` or `'https://'`, this is treated as an external link.
+	 * Otherwise, it is treated as a path to controller/action and parsed using
+	 * the `Router::match()` method (where `Router` is the routing class dependency specified by
+	 * the rendering context, i.e. `lithium\template\view\Renderer::$_classes`).
+	 *
+	 * If `$url` is empty, `$title` is used in its place.
+	 *
+	 * @param string $title The content to be wrapped by an `<button />` tag.
+	 * @param mixed $url Can be a string representing a URL relative to the base of your Lithium
+	 *              application, an external URL (starts with `'http://'` or `'https://'`), an
+	 *              anchor name starting with `'#'` (i.e. `'#top'`), or an array defining a set
+	 *              of request parameters that should be matched against a route in `Router`.
+	 * @param array $options The available options are:
+	 *              - `'escape'` _boolean_: Whether or not the title content should be escaped.
+	 *              Defaults to `true`.
+	 *              - any other options specified are rendered as HTML attributes of the element.
+	 * @return string Returns an `<button />` element.
+	 */
+	public function button($title, $url = null, array $options = array()) {
+		$defaults = array('escape' => true, 'type' => null);
+		list($scope, $options) = $this->_options($defaults, $options);
+
+		if (isset($scope['type']) && $type = $scope['type']) {
+			$options += compact('title');
+			return $this->_metaLink($type, $url, $options);
+		}
+
+		$url = is_null($url) ? $title : $url;
+		return $this->_render(__METHOD__, 'button', compact('title', 'url', 'options'), $scope);
 	}
 
 	/**
